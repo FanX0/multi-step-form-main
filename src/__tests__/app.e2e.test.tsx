@@ -1,8 +1,16 @@
-import { render, screen, within } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "../App";
 
 describe("Multi-step form end-to-end (Vitest)", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
   test("Full flow: select plan, toggle billing, add-ons, summary and localStorage", async () => {
     const user = userEvent.setup();
 
@@ -49,6 +57,72 @@ describe("Multi-step form end-to-end (Vitest)", () => {
     expect(localStorage.getItem("selectedAddOns")).toBe(
       JSON.stringify(["Online service", "Larger storage"])
     );
+    expect(localStorage.getItem("currentPage")).toBe("4");
+  });
+
+  test("Confirm shows Thank you regardless of add-ons", async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    // Step 1 -> Step 2
+    await user.click(screen.getByRole("button", { name: /next step/i }));
+
+    // Pick a plan
+    await user.click(screen.getByRole("radio", { name: /arcade/i }));
+
+    // Step 2 -> Step 3
+    await user.click(screen.getByRole("button", { name: /next step/i }));
+
+    // Select at least one add-on (to ensure previous logic won't block thank-you)
+    await user.click(screen.getByRole("checkbox", { name: /online service/i }));
+
+    // Step 3 -> Step 4
+    await user.click(screen.getByRole("button", { name: /next step/i }));
+
+    // Confirm
+    await user.click(screen.getByRole("button", { name: /confirm/i }));
+
+    // Expect Thank you screen
+    expect(screen.getByRole("heading", { name: /thank you/i })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /finishing up/i })).not.toBeInTheDocument();
+  });
+
+  test("Go Back navigates to previous step and updates localStorage", async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    // Step 1 -> Step 2
+    await user.click(screen.getByRole("button", { name: /next step/i }));
+    // Pick a plan to allow progression
+    await user.click(screen.getByRole("radio", { name: /arcade/i }));
+    // Step 2 -> Step 3
+    await user.click(screen.getByRole("button", { name: /next step/i }));
+
+    // Go Back to Step 2
+    await user.click(screen.getByRole("button", { name: /go back/i }));
+    expect(screen.getByText(/select your plan/i)).toBeInTheDocument();
+    expect(localStorage.getItem("currentPage")).toBe("2");
+
+    // Go Back to Step 1
+    await user.click(screen.getByRole("button", { name: /go back/i }));
+    expect(screen.getByText(/personal info/i)).toBeInTheDocument();
+    expect(localStorage.getItem("currentPage")).toBe("1");
+  });
+
+  test("Desktop sidebar navigation buttons jump to target step", async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    // Use the <nav> area to click step 4 directly
+    const nav = screen.getByRole("navigation");
+    const step4Btn = within(nav).getByRole("button", { name: /summary/i });
+    await user.click(step4Btn);
+
+    // We jumped to step 4 without a selected plan
+    expect(screen.getByText(/no plan selected yet\./i)).toBeInTheDocument();
     expect(localStorage.getItem("currentPage")).toBe("4");
   });
 });

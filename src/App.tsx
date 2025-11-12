@@ -5,6 +5,7 @@ import bgSidebarDesktop from "./assets/images/bg-sidebar-desktop.svg";
 import iconArcade from "./assets/images/icon-arcade.svg";
 import iconAdvanced from "./assets/images/icon-advanced.svg";
 import iconPro from "./assets/images/icon-pro.svg";
+import iconthankyou from "./assets/images/icon-thank-you.svg";
 
 type Billing = "Monthly" | "Yearly";
 type PlanId = "Arcade" | "Advanced" | "Pro";
@@ -44,7 +45,9 @@ const App = () => {
 
   const [billing, setBilling] = useState<Billing>(() => {
     const saved = localStorage.getItem("billing");
-    return saved === "Monthly" || saved === "Yearly" ? (saved as Billing) : "Monthly";
+    return saved === "Monthly" || saved === "Yearly"
+      ? (saved as Billing)
+      : "Monthly";
   });
   const [selectedPlan, setSelectedPlan] = useState<PlanId | null>(() => {
     const saved = localStorage.getItem("selectedPlan");
@@ -68,6 +71,8 @@ const App = () => {
       return [];
     }
   });
+
+  const [confirm, setConfirm] = useState<boolean>(false);
 
   useEffect(() => {
     localStorage.setItem("currentPage", currentPage.toString());
@@ -110,6 +115,7 @@ const App = () => {
       return prev.filter((item) => item !== addOn);
     });
   };
+  const handleConfirm = () => setConfirm(true);
 
   const planPrice = selectedPlan ? PLAN_PRICES[billing][selectedPlan] : 0;
 
@@ -123,73 +129,89 @@ const App = () => {
   const totalLabel = billing === "Monthly" ? "per month" : "per year";
 
   return (
-    <>
-      <header className="responsive ">
-        <div className="flex items-center justify-center gap-4 my-8">
-          <button
-            className={`
-            ${
-              currentPage === 1
-                ? "bg-Blue-200 text-black"
-                : "border-1 border-white text-white"
-            } w-[2rem] h-[2rem] rounded-full`}
-            onClick={() => handleChangePage(1)}
-          >
-            1
-          </button>
-          <button
-            className={`
-            ${
-              currentPage === 2
-                ? "bg-Blue-200 text-black"
-                : "border-1 border-white text-white"
-            } w-[2rem] h-[2rem] rounded-full`}
-            onClick={() => handleChangePage(2)}
-          >
-            2
-          </button>
-          <button
-            className={`
-            ${
-              currentPage === 3
-                ? "bg-Blue-200 text-black"
-                : "border-1 border-white text-white"
-            } w-[2rem] h-[2rem] rounded-full`}
-            onClick={() => handleChangePage(3)}
-          >
-            3
-          </button>
-          <button
-            className={`
-            ${
-              currentPage === 4
-                ? "bg-Blue-200 text-black"
-                : "border-1 border-white text-white"
-            } w-[2rem] h-[2rem] rounded-full`}
-            onClick={() => handleChangePage(4)}
-          >
-            4
-          </button>
-        </div>
-        <picture className="absolute left-0 top-0 w-full h-full z-[-1]">
-          <source
-            srcSet={bgSidebarMobile}
-            type="image/jpeg"
-            media="(max-width: 37.5rem)"
-          />
+    <AppLayout>
+      {/* Desktop sidebar */}
+      <aside className="relative hidden lg:block overflow-hidden rounded-xl p-4">
+        <img
+          src={bgSidebarDesktop}
+          alt="background sidebar"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <nav className="relative z-10 p-6 text-White">
+          <ul className="flex flex-col gap-6">
+            {[1, 2, 3, 4].map((num) => (
+              <li key={num} className="">
+                <button onClick={() => handleChangePage(num)}>
+                  <div className="flex items-center  gap-2">
+                    <p
+                      className={`${
+                        currentPage === num
+                          ? "bg-Blue-200 text-black"
+                          : "border border-White text-White"
+                      } w-[2rem] h-[2rem] rounded-full flex items-center justify-center`}
+                    >
+                      {num}
+                    </p>
+                    <div className="uppercase tracking-wider">
+                      <p className="text-Blue-300 text-xs text-start">
+                        Step {num}
+                      </p>
+                      <p className="text-sm font-bold">
+                        {num === 1 && "Your info"}
+                        {num === 2 && "Select plan"}
+                        {num === 3 && "Add-ons"}
+                        {num === 4 && "Summary"}
+                      </p>
+                    </div>
+                  </div>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </aside>
 
-          <source
-            srcSet={bgSidebarDesktop}
-            type="image/jpeg"
-            media="(min-width: 102.5rem)"
-          />
+      {/* Content column */}
+      <div>
+        {/* Mobile header */}
+        <header className="absolute top-0 left-0 right-0 lg:hidden">
+          <div className="flex items-center justify-center gap-4 my-8">
+            {[1, 2, 3, 4].map((num) => (
+              <button
+                key={num}
+                className={`${
+                  currentPage === num
+                    ? "bg-Blue-200 text-black"
+                    : "border border-white text-white"
+                } w-[2rem] h-[2rem] rounded-full`}
+                onClick={() => handleChangePage(num)}
+              >
+                {num}
+              </button>
+            ))}
+          </div>
 
-          <img src={bgSidebarDesktop} alt="background sidebar" className="" />
-        </picture>
-      </header>
+          <picture>
+            <source
+              srcSet={bgSidebarMobile}
+              type="image/jpeg"
+              media="(max-width: 37.5rem)"
+            />
+            <source
+              srcSet={bgSidebarDesktop}
+              type="image/jpeg"
+              media="(min-width: 102.5rem)"
+            />
 
-      <AppLayout>
-        <div>
+            <img
+              src={bgSidebarDesktop}
+              alt="background sidebar"
+              className="fixed left-0 top-0 w-full z-[-1] lg:object-cover lg:absolute"
+            />
+          </picture>
+        </header>
+
+        <div className="flex flex-col lg:justify-between h-full">
           <div>
             {/* Step 1 */}
             <section className={currentPage === 1 ? "" : "hidden"}>
@@ -238,7 +260,9 @@ const App = () => {
               <form>
                 <fieldset className="space-y-4">
                   <legend>Select your plan</legend>
-                  <p>You have the option of monthly or yearly billing.</p>
+                  <p className="text-Grey-500">
+                    You have the option of monthly or yearly billing.
+                  </p>
 
                   <label
                     htmlFor="plan-arcade"
@@ -264,7 +288,9 @@ const App = () => {
                         ${PLAN_PRICES[billing].Arcade}
                         {priceSuffix}
                       </div>
-                      {billing === "Yearly" && <p>2 months free</p>}
+                      {billing === "Yearly" && (
+                        <p className="text-sm font-medium">2 months free</p>
+                      )}
                     </span>
                   </label>
 
@@ -292,7 +318,9 @@ const App = () => {
                         ${PLAN_PRICES[billing].Advanced}
                         {priceSuffix}
                       </div>
-                      {billing === "Yearly" && <p>2 months free</p>}
+                      {billing === "Yearly" && (
+                        <p className="text-sm font-medium">2 months free</p>
+                      )}
                     </span>
                   </label>
 
@@ -318,34 +346,35 @@ const App = () => {
                         ${PLAN_PRICES[billing].Pro}
                         {priceSuffix}
                       </div>
-                      {billing === "Yearly" && <p>2 months free</p>}
+                      {billing === "Yearly" && (
+                        <p className="text-sm font-medium">2 months free</p>
+                      )}
                     </span>
                   </label>
-                </fieldset>
-
-                <div>
-                  <p>Monthly</p>
-                  <div className="relative inline-block w-11 h-5">
-                    <input
-                      id="billing-switch"
-                      type="checkbox"
-                      onChange={handleToggleBilling}
-                      checked={billing === "Yearly"}
-                      className="peer appearance-none w-11 h-5 bg-slate-100 rounded-full checked:bg-slate-800 cursor-pointer transition-colors duration-300"
-                    />
-                    <label
-                      htmlFor="billing-switch"
-                      className="absolute top-0 left-0 w-5 h-5 bg-white rounded-full border border-slate-300 shadow-sm transition-transform duration-300 peer-checked:translate-x-6 peer-checked:border-slate-800 cursor-pointer"
-                    ></label>
+                  <div className="flex items-center justify-center gap-4 bg-Blue-50 py-[0.5rem]">
+                    <p>Monthly</p>
+                    <div className="relative inline-block w-11 h-5">
+                      <input
+                        id="billing-switch"
+                        type="checkbox"
+                        onChange={handleToggleBilling}
+                        checked={billing === "Yearly"}
+                        className="peer appearance-none w-11 h-5 bg-slate-100 rounded-full checked:bg-slate-800 cursor-pointer transition-colors duration-300"
+                      />
+                      <label
+                        htmlFor="billing-switch"
+                        className="absolute top-0 left-0 w-5 h-5 bg-white rounded-full border border-slate-300 shadow-sm transition-transform duration-300 peer-checked:translate-x-6 peer-checked:border-slate-800 cursor-pointer"
+                      ></label>
+                    </div>
+                    <p>Yearly</p>
                   </div>
-                  <p>Yearly</p>
-                </div>
+                </fieldset>
               </form>
             </section>
 
             <section className={currentPage === 3 ? "" : "hidden"}>
               <form>
-                <fieldset>
+                <fieldset className="flex flex-col gap-4 ">
                   <legend>Add-ons</legend>
                   <p className="text-Grey-500">
                     Add-ons help enhance your gaming experience.
@@ -455,16 +484,33 @@ const App = () => {
               </form>
             </section>
 
-            {/* Step 4: Summary - Live calculated */}
+            {/* Step 4: Summary / Thank you */}
             <section
               className={`${
                 currentPage === 4 ? "" : "hidden"
-              } flex flex-col  gap-[1rem]`}
+              } flex flex-col gap-[1rem]`}
             >
-              <h2 className="text-2xl font-bold text-Blue-950">Finishing up</h2>
-
-              {selectedPlan ? (
+              {confirm ? (
+                <div className="text-center flex flex-col items-center gap-[1rem] py-[3rem] px-[1rem]  lg:mt-[10rem]">
+                  <img
+                    src={iconthankyou}
+                    alt="icon-thankyou"
+                    className="w-[3rem]"
+                  />
+                  <h2 className="text-2xl font-bold text-Blue-950">
+                    Thank you!
+                  </h2>
+                  <p className="text-Grey-500 font-normal ">
+                    Thanks for confirming your subscription! We hope you have
+                    fun using our platform. If you ever need support, please
+                    feel free to email us at support@loremgaming.com
+                  </p>
+                </div>
+              ) : selectedPlan ? (
                 <>
+                  <h2 className="text-2xl font-bold text-Blue-950">
+                    Finishing up
+                  </h2>
                   <p className="text-Grey-500">
                     Double-check everything looks OK before confirming.
                   </p>
@@ -520,10 +566,10 @@ const App = () => {
             </section>
           </div>
 
-          <footer className="fixed bottom-0 left-0 right-0 bg-white p-4 flex justify-between items-center">
+          <footer className="fixed bottom-0 left-0 right-0 bg-white p-4 flex justify-between items-center lg:static">
             <button
               className={`${
-                currentPage === 1 ? "hidden" : ""
+                confirm ? "hidden" : currentPage === 1 ? "hidden" : ""
               }  text-Grey-500 px-4 py-2 rounded-md`}
               onClick={() => handleChangePage(currentPage - 1)}
             >
@@ -531,17 +577,21 @@ const App = () => {
             </button>
 
             <button
-              onClick={() => handleChangePage(currentPage + 1)}
+              onClick={
+                currentPage === 4
+                  ? handleConfirm
+                  : () => handleChangePage(currentPage + 1)
+              }
               className={`${
-                currentPage === 1 ? "ml-auto" : ""
+                confirm ? "hidden" : currentPage === 1 ? "ml-auto" : ""
               } bg-Blue-950 text-white px-4 py-2 rounded-md`}
             >
               {currentPage === 4 ? "Confirm" : "Next Step"}
             </button>
           </footer>
         </div>
-      </AppLayout>
-    </>
+      </div>
+    </AppLayout>
   );
 };
 
